@@ -1,0 +1,42 @@
+# Build output
+build/*
+!build/.gitkeep
+rootfs/
+out/
+dist/
+*.img
+*.img.xz
+*.iso
+*.tar
+*.tar.gz
+
+# Kernel/build artifacts
+*.o
+*.a
+*.ko
+*.dtb
+*.dtbo
+*.bin
+*.elf
+*.map
+modules.order
+Module.symvers
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Secrets / local configuration
+.env
+*.secret
+*.token
+credentials.json
