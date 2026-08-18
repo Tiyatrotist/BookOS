@@ -1,0 +1,25 @@
+# Base system
+ca-certificates
+sudo
+systemd
+systemd-sysv
+udev
+network-manager
+curl
+wget
+git
+nano
+vim-tiny
+bash-completion
+locales
+tzdata
+
+# Desktop foundation (installed in later build stages)
+# kde-plasma-desktop
+# plasma-workspace-wayland
+# kwin-wayland
+# sddm
+
+# Tablet/input support (installed after hardware validation)
+# libinput
+# maliit-keyboard
