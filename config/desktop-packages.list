@@ -1,0 +1,10 @@
+# KDE Plasma 6 desktop foundation
+kde-plasma-desktop
+kwin-wayland
+sddm
+xwayland
+plasma-wayland-protocols
+
+# Common desktop hardware/session integration
+polkit-kde-agent-1
+network-manager
