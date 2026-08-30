@@ -5,9 +5,15 @@ systemd
 systemd-sysv
 udev
 network-manager
+openssh-server
 curl
 wget
 git
+python3
+build-essential
+clang
+cmake
+ninja-build
 nano
 vim-tiny
 bash-completion
