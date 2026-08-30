@@ -69,8 +69,6 @@ if [[ "$CROSS_BOOTSTRAP" == true ]]; then
 
   echo "==> Stage 2: finalizing $BOOKOS_ARCH base system"
   chroot "$ROOTFS_DIR" /debootstrap/debootstrap --second-stage
-
-  rm -f "$ROOTFS_DIR/usr/bin/qemu-aarch64-static"
 else
   echo "==> Native bootstrap: Debian $BOOKOS_RELEASE ($BOOKOS_ARCH)"
   debootstrap \
@@ -80,6 +78,11 @@ else
     "$ROOTFS_DIR" \
     "$BOOKOS_MIRROR"
 fi
+
+# Install the versioned BookOS base package set. The installer keeps QEMU
+# available in ARM64 rootfs builds until all package post-install scripts finish.
+echo "==> Installing BookOS base package set"
+bash "$ROOT_DIR/scripts/install-rootfs-packages.sh"
 
 echo "BookOS $BOOKOS_ARCH rootfs created at: $ROOTFS_DIR"
 echo "Architecture: $(chroot "$ROOTFS_DIR" dpkg --print-architecture)"
