@@ -15,15 +15,71 @@ command -v debootstrap >/dev/null 2>&1 || {
   exit 1
 }
 
+ROOTFS_DIR="$BOOKOS_ROOTFS"
+if [[ "$ROOTFS_DIR" != /* ]]; then
+  ROOTFS_DIR="$ROOT_DIR/$ROOTFS_DIR"
+fi
+
+HOST_ARCH="$(dpkg --print-architecture 2>/dev/null || true)"
+CROSS_BOOTSTRAP=false
+
+if [[ "$BOOKOS_ARCH" != "$HOST_ARCH" ]]; then
+  CROSS_BOOTSTRAP=true
+fi
+
+QEMU_AARCH64="/usr/bin/qemu-aarch64-static"
+if [[ "$CROSS_BOOTSTRAP" == true && "$BOOKOS_ARCH" == "arm64" ]]; then
+  if [[ ! -x "$QEMU_AARCH64" ]]; then
+    echo "qemu-aarch64-static is required for ARM64 cross-bootstrap."
+    echo "Install it with: sudo apt install qemu-user-static"
+    exit 1
+  fi
+fi
+
 mkdir -p "$ROOT_DIR/build"
-rm -rf "$BOOKOS_ROOTFS"
+rm -rf "$ROOTFS_DIR"
 
-# Stage 1: create a minimal Debian ARM64 filesystem.
-debootstrap \
-  --arch="$BOOKOS_ARCH" \
-  --variant=minbase \
-  "$BOOKOS_RELEASE" \
-  "$BOOKOS_ROOTFS" \
-  "$BOOKOS_MIRROR"
+if [[ "$CROSS_BOOTSTRAP" == true ]]; then
+  echo "==> Stage 1: bootstrapping Debian $BOOKOS_RELEASE ($BOOKOS_ARCH) on $HOST_ARCH"
+  debootstrap \
+    --foreign \
+    --arch="$BOOKOS_ARCH" \
+    --variant=minbase \
+    "$BOOKOS_RELEASE" \
+    "$ROOTFS_DIR" \
+    "$BOOKOS_MIRROR"
 
-echo "BookOS ARM64 rootfs created at: $BOOKOS_ROOTFS"
+  if [[ "$BOOKOS_ARCH" == "arm64" ]]; then
+    install -D -m 0755 "$QEMU_AARCH64" "$ROOTFS_DIR/usr/bin/qemu-aarch64-static"
+
+    if [[ -x /usr/sbin/update-binfmts ]]; then
+      /usr/sbin/update-binfmts --enable qemu-aarch64 >/dev/null 2>&1 || true
+    fi
+
+    BINFMT_HANDLER="/proc/sys/fs/binfmt_misc/qemu-aarch64"
+    if [[ ! -e "$BINFMT_HANDLER" ]]; then
+      echo "ARM64 binfmt_misc support is not enabled on this host."
+      echo "Install it with: sudo apt install qemu-user-binfmt binfmt-support"
+      echo "Then rerun: sudo ./scripts/build.sh bootstrap-rootfs"
+      exit 1
+    fi
+
+    chroot "$ROOTFS_DIR" /bin/true
+  fi
+
+  echo "==> Stage 2: finalizing $BOOKOS_ARCH base system"
+  chroot "$ROOTFS_DIR" /debootstrap/debootstrap --second-stage
+
+  rm -f "$ROOTFS_DIR/usr/bin/qemu-aarch64-static"
+else
+  echo "==> Native bootstrap: Debian $BOOKOS_RELEASE ($BOOKOS_ARCH)"
+  debootstrap \
+    --arch="$BOOKOS_ARCH" \
+    --variant=minbase \
+    "$BOOKOS_RELEASE" \
+    "$ROOTFS_DIR" \
+    "$BOOKOS_MIRROR"
+fi
+
+echo "BookOS $BOOKOS_ARCH rootfs created at: $ROOTFS_DIR"
+echo "Architecture: $(chroot "$ROOTFS_DIR" dpkg --print-architecture)"
