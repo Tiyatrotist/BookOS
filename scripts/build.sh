@@ -9,6 +9,7 @@ BookOS build entry point
 
 Usage:
   sudo ./scripts/build.sh bootstrap-rootfs
+  sudo ./scripts/build.sh install-desktop
   sudo ./scripts/build.sh clean
   ./scripts/build.sh info
 EOF
@@ -17,6 +18,9 @@ EOF
 case "${1:-}" in
   bootstrap-rootfs)
     exec "$ROOT_DIR/scripts/bootstrap-rootfs.sh"
+    ;;
+  install-desktop)
+    exec "$ROOT_DIR/scripts/install-desktop.sh"
     ;;
   clean)
     rm -rf "$ROOT_DIR/build/rootfs" "$ROOT_DIR/build/out"
